@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>会议登记</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, select, button { display: block; margin: 10px 0; padding: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2>会议登记表</h2>
+  <form id="registerForm">
+    <input type="text" id="name" placeholder="姓名" required />
+    <input type="text" id="company" placeholder="企业名称" required />
+    <select id="industry" required>
+      <option value="">请选择企业类型</option>
+      <option value="制造业">制造业</option>
+      <option value="互联网">互联网</option>
+      <option value="教育">教育</option>
+      <option value="医疗">医疗</option>
+      <option value="国企/央企">国企/央企</option>
+      <option value="外资企业">外资企业</option>
+    </select>
+    <button type="submit">提交</button>
+  </form>
+  <p id="result"></p>
+
+  <script>
+    const industryToArea = {
+      "制造业": "A区",
+      "互联网": "B区",
+      "教育": "C区",
+      "医疗": "D区",
+      "国企/央企": "贵宾区",
+      "外资企业": "贵宾区"
+    };
+
+    const client = mqtt.connect("wss://test.mosquitto.org:8081"); // 使用公网 MQTT broker 测试
+
+    client.on('connect', function () {
+      console.log('MQTT 连接成功');
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const company = document.getElementById('company').value;
+      const industry = document.getElementById('industry').value;
+      const area = industryToArea[industry] || '未知';
+
+      const payload = JSON.stringify({ name, company, industry, area, timestamp: Date.now() });
+
+      client.publish('conference/registration', payload);
+      document.getElementById('result').textContent = `提交成功，已为您分配至 ${area}`;
+    });
+  </script>
+</body>
+</html>
